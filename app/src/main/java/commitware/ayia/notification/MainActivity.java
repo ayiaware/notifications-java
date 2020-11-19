@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     Button btnDate ;
 
-    final Calendar myCalendar = Calendar. getInstance () ;
+    private static Calendar myCalendar;
 
     private RelativeLayout mMainRelativeLayout;
 
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         mNotificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
 
-
+        myCalendar = Calendar.getInstance(Locale.getDefault());
         //create on firstStart
 
         Channel channel = null;
@@ -114,14 +114,50 @@ public class MainActivity extends AppCompatActivity {
         }
         });
 
+        final DatePickerDialog.OnDateSetListener dateSetListenerReturn = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                Calendar c = Calendar.getInstance();
+                // set new date
+                c.set(year, monthOfYear, dayOfMonth); // set new date
+
+                String myFormat = "dd/MM/yy" ; //In which you need put here
+                SimpleDateFormat sdf = new SimpleDateFormat(myFormat , Locale.getDefault ()) ;
+
+                long scheduleExpiry = System.currentTimeMillis()-c.getTimeInMillis() ;
+
+                Toast.makeText(MainActivity.this,sdf.format(c.getTime()),Toast.LENGTH_LONG).show();
+
+                Channel channel = null;
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+
+                    channel = new Channel("channel_member_2","Subscription Notification 2",
+                            "Member Subscription Expiration Notifications", NotificationManager.IMPORTANCE_DEFAULT,
+                            true, NotificationCompat.VISIBILITY_PRIVATE);
+                }
+
+                final String notificationChannelId = NotificationUtil.createNotificationChannel(MainActivity.this, channel);
+
+                scheduleNotification("Member "+uniqueId, scheduleExpiry, uniqueId, notificationChannelId);
+
+                uniqueId++;
+            }
+        };
+
         btnDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-             setDate(v);
+                DatePickerDialog dialog = new DatePickerDialog(MainActivity.this,dateSetListenerReturn,myCalendar.get(Calendar.YEAR),myCalendar.get(Calendar.MONTH),myCalendar.get(Calendar.DATE));
+                dialog.getDatePicker().setMinDate(new Date().getTime());
+                dialog.show();
 
             }
         });
+
+
+
     }
 
 
@@ -160,8 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
+    /*
         DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet (DatePicker view , int year , int monthOfYear , int dayOfMonth) {
@@ -181,31 +216,8 @@ public class MainActivity extends AppCompatActivity {
                     myCalendar .get(Calendar. DAY_OF_MONTH )
             ).show() ;
         }
+*/
 
-
-        private void updateLabel () {
-            String myFormat = "dd/MM/yy" ; //In which you need put here
-            SimpleDateFormat sdf = new SimpleDateFormat(myFormat , Locale.getDefault ()) ;
-            long date = myCalendar.getTimeInMillis() ;
-           // btnDate .setText(sdf.format(myCalendar.getTime())) ;
-
-            Toast.makeText(MainActivity.this,sdf.format(myCalendar.getTime()),Toast.LENGTH_LONG).show();
-
-            Channel channel = null;
-
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-
-                channel = new Channel("channel_member_2","Subscription Notification 2",
-                        "Member Subscription Expiration Notifications", NotificationManager.IMPORTANCE_DEFAULT,
-                        true, NotificationCompat.VISIBILITY_PRIVATE);
-            }
-
-            final String notificationChannelId = NotificationUtil.createNotificationChannel(MainActivity.this, channel);
-
-            scheduleNotification("Member "+uniqueId, 10000, uniqueId, notificationChannelId);
-
-            uniqueId++;
-        }
 
 
     @Override
